@@ -1,0 +1,40 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Docker Login
+        if: github.event_name == 'push'
+        env:
+          DOCKER_USER: ${{ secrets.DOCKER_USER }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        run: |
+          echo "Iniciando login"
+          echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USER" --password-stdin
+          echo "Fin de login"
+
+      - name: Build Docker Image
+        run: |
+          docker build -t "$DOCKER_IMAGE" .
+        env:
+          DOCKER_IMAGE: ${{ secrets.DOCKER_USER }}/redes2web:flaskv2
+
+      - name: Push Docker Image
+        if: github.event_name == 'push'
+        run: |
+          docker push "$DOCKER_IMAGE"
+        env:
+          DOCKER_IMAGE: ${{ secrets.DOCKER_USER }}/redes2web:flaskv2
