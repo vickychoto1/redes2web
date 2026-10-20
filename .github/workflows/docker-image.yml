@@ -20,7 +20,7 @@ jobs:
         if: github.event_name == 'push'
         env:
           DOCKER_USER: ${{ secrets.DOCKER_USER }}
-          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+          DOCKER_PASSWORD: ${{ secrets.TOKEN_DE_ACCESO }}
         run: |
           echo "Iniciando login"
           echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USER" --password-stdin
