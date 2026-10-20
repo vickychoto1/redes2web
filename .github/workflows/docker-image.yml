@@ -19,22 +19,17 @@ jobs:
       - name: Docker Login
         if: github.event_name == 'push'
         env:
-          DOCKER_USER: ${{ secrets.DOCKER_USER }}
           DOCKER_PASSWORD: ${{ secrets.TOKEN_DE_ACCESO }}
         run: |
           echo "Iniciando login"
-          echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USER" --password-stdin
+          echo "$DOCKER_PASSWORD" | docker login -u "vicky2606" --password-stdin
           echo "Fin de login"
 
       - name: Build Docker Image
-        env:
-          DOCKER_IMAGE: ${{ secrets.DOCKER_USER }}/redes2:flaskv2
         run: |
-          docker build -t "$DOCKER_IMAGE" .
+          docker build -t vicky2606/redes2:flaskv2 .
 
       - name: Push Docker Image
         if: github.event_name == 'push'
-        env:
-          DOCKER_IMAGE: ${{ secrets.DOCKER_USER }}/redes2:flaskv2
         run: |
-          docker push "$DOCKER_IMAGE"
+          docker push vicky2606/redes2:flaskv2
