@@ -28,13 +28,13 @@ jobs:
 
       - name: Build Docker Image
         env:
-          DOCKER_IMAGE: ${{ secrets.DOCKER_USER }}/redes2web:flaskv2
+          DOCKER_IMAGE: ${{ secrets.DOCKER_USER }}/redes2:flaskv2
         run: |
           docker build -t "$DOCKER_IMAGE" .
 
       - name: Push Docker Image
         if: github.event_name == 'push'
         env:
-          DOCKER_IMAGE: ${{ secrets.DOCKER_USER }}/redes2web:flaskv2
+          DOCKER_IMAGE: ${{ secrets.DOCKER_USER }}/redes2:flaskv2
         run: |
           docker push "$DOCKER_IMAGE"
