@@ -47,7 +47,7 @@ jobs:
                       assert response.read().decode() == "P\u00e1gina de Prueba"
                   print("HTTP 200: la aplicacion original responde desde Docker")
                   break
-              except (urllib.error.URLError, TimeoutError):
+              except (urllib.error.URLError, OSError):
                   time.sleep(1)
           else:
               raise RuntimeError("El contenedor no respondio a tiempo")
