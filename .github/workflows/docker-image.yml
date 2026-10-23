@@ -1,6 +1,7 @@
 name: Docker Image CI
 
 on:
+  workflow_dispatch:
   push:
     branches: ["main"]
   pull_request:
@@ -16,20 +17,54 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Docker Login
-        if: github.event_name == 'push'
-        env:
-          DOCKER_PASSWORD: ${{ secrets.TOKEN_DE_ACCESO }}
-        run: |
-          echo "Iniciando login"
-          echo "$DOCKER_PASSWORD" | docker login -u "vicky2606" --password-stdin
-          echo "Fin de login"
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Test original Flask application
+        run: python -m unittest discover -s tests -v
 
       - name: Build Docker Image
         run: |
-          docker build -t vicky2606/redes2:flaskv2 .
+          docker build -t vicky2606/redes2:flaskv2 -t vicky2606/redes2:${{ github.sha }} .
+
+      - name: Test running Docker container
+        run: |
+          docker run -d --name redes2web-test -p 127.0.0.1:5000:5000 vicky2606/redes2:flaskv2
+          python - <<'PY'
+          import time
+          import urllib.error
+          import urllib.request
+
+          for attempt in range(30):
+              try:
+                  with urllib.request.urlopen("http://127.0.0.1:5000/", timeout=2) as response:
+                      assert response.status == 200
+                      assert response.read().decode() == "P\u00e1gina de Prueba"
+                  print("HTTP 200: la aplicacion original responde desde Docker")
+                  break
+              except (urllib.error.URLError, TimeoutError):
+                  time.sleep(1)
+          else:
+              raise RuntimeError("El contenedor no respondio a tiempo")
+          PY
+
+      - name: Docker Login
+        if: github.event_name != 'pull_request'
+        env:
+          DOCKER_PASSWORD: ${{ secrets.TOKEN_DE_ACCESO }}
+        run: printf '%s' "$DOCKER_PASSWORD" | docker login -u "vicky2606" --password-stdin
 
       - name: Push Docker Image
-        if: github.event_name == 'push'
+        if: github.event_name != 'pull_request'
         run: |
           docker push vicky2606/redes2:flaskv2
+          docker push vicky2606/redes2:${{ github.sha }}
+
+      - name: Clean up test container
+        if: always()
+        run: docker rm -f redes2web-test || true

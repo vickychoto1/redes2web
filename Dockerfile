@@ -1,6 +1,9 @@
 FROM python:3.10-slim
 WORKDIR /app
-RUN pip install --no-cache-dir flask
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 COPY main.py .
+RUN useradd --create-home appuser
+USER appuser
 EXPOSE 5000
-CMD ["python", "main.py"]
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--access-logfile", "-", "main:app"]
